@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Model weights (never commit these)
+*.safetensors
+*.bin
+*.pt
+
+# TRT engine files (huge)
+trt-engine/
+
+# OS
+.DS_Store

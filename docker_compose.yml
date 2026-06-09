@@ -1,0 +1,59 @@
+services:
+
+  baseline:
+    build: ./baseline
+    volumes:
+      - /workspace/models:/models
+      - ./baseline:/app
+    ports:
+      - "8001:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  vllm:
+    image: vllm/vllm-openai:latest
+    volumes:
+      - /workspace/models:/models
+    ports:
+      - "8002:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  trtllm:
+    image: nvcr.io/nvidia/tritonserver:24.01-trtllm-python-py3
+    volumes:
+      - /workspace/models:/models
+      - /workspace/trt-engine:/engine
+    ports:
+      - "8003:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  sglang:
+    image: lmsysorg/sglang:latest
+    volumes:
+      - /workspace/models:/models
+    ports:
+      - "8004:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
