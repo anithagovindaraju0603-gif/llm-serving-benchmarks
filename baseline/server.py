@@ -1,8 +1,9 @@
 from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+import json
 from pydantic import BaseModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
-import time
 
 app = FastAPI()
 
@@ -25,39 +26,34 @@ class CompletionRequest(BaseModel):
 
 @app.post("/v1/completions")
 def completions(req: CompletionRequest):
-    start = time.time()
-
     inputs = tokenizer(req.prompt, return_tensors="pt").to("cuda")
-    
-    with torch.no_grad():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=req.max_tokens,
-            do_sample=False
+
+    def generate_stream():
+        with torch.no_grad():
+            outputs = model.generate(
+                **inputs,
+                max_new_tokens=req.max_tokens,
+                do_sample=False
+            )
+        text = tokenizer.decode(
+            outputs[0][inputs["input_ids"].shape[1]:],
+            skip_special_tokens=True
         )
-
-    text = tokenizer.decode(outputs[0], skip_special_tokens=True)
-    
-    end = time.time()
-
-    return {
-        "id": "cmpl-baseline",
-        "object": "text_completion",
-        "model": req.model,
-        "choices": [
-            {
-                "text": text,
-                "index": 0,
-                "finish_reason": "stop"
+        chunk = {
+            "id": "cmpl-baseline",
+            "object": "text_completion",
+            "model": req.model,
+            "choices": [{"text": text, "index": 0, "finish_reason": "stop"}],
+            "usage": {
+                "prompt_tokens": inputs["input_ids"].shape[1],
+                "completion_tokens": outputs.shape[1] - inputs["input_ids"].shape[1],
+                "total_tokens": outputs.shape[1]
             }
-        ],
-        "usage": {
-            "prompt_tokens": inputs["input_ids"].shape[1],
-            "completion_tokens": outputs.shape[1] - inputs["input_ids"].shape[1],
-            "total_tokens": outputs.shape[1]
-        },
-        "latency_seconds": round(end - start, 3)
-    }
+        }
+        yield f"data: {json.dumps(chunk)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(generate_stream(), media_type="text/event-stream")
 
 @app.get("/health")
 def health():
