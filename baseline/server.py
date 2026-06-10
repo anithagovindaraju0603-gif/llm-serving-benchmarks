@@ -6,7 +6,7 @@ import time
 
 app = FastAPI()
 
-MODEL_PATH = "/models/Meta-Llama-3-8B-Instruct"
+MODEL_PATH = "/workspace/models/Meta-Llama-3-8B-Instruct"
 
 print("Loading model...")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
