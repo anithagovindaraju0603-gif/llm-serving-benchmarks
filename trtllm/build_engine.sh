@@ -16,14 +16,11 @@ docker run --gpus all \
     -v /workspace/trt-engine:/engine \
     nvcr.io/nvidia/tritonserver:24.01-trtllm-python-py3 \
     bash -c "
-        # Step 1 — convert HuggingFace weights to TRT-LLM checkpoint format
         python /app/tensorrt_llm/examples/llama/convert_checkpoint.py \
             --model_dir /models/Meta-Llama-3-8B-Instruct \
             --output_dir /engine/trt-ckpt \
-            --dtype float16
-
-        # Step 2 — compile the checkpoint into a TensorRT engine
-        trtllm-build \
+            --dtype float16 \
+        && trtllm-build \
             --checkpoint_dir /engine/trt-ckpt \
             --output_dir /engine/trt-engine \
             --gemm_plugin float16 \

@@ -18,13 +18,13 @@ model = AutoModelForCausalLM.from_pretrained(
 print("Model loaded.")
 
 
-class Request(BaseModel):
+class CompletionRequest(BaseModel):
+    model: str = "meta-llama/Meta-Llama-3-8B-Instruct"
     prompt: str
     max_tokens: int = 256
 
-
-@app.post("/generate")
-def generate(req: Request):
+@app.post("/v1/completions")
+def completions(req: CompletionRequest):
     start = time.time()
 
     inputs = tokenizer(req.prompt, return_tensors="pt").to("cuda")
@@ -41,10 +41,23 @@ def generate(req: Request):
     end = time.time()
 
     return {
-        "text": text,
+        "id": "cmpl-baseline",
+        "object": "text_completion",
+        "model": req.model,
+        "choices": [
+            {
+                "text": text,
+                "index": 0,
+                "finish_reason": "stop"
+            }
+        ],
+        "usage": {
+            "prompt_tokens": inputs["input_ids"].shape[1],
+            "completion_tokens": outputs.shape[1] - inputs["input_ids"].shape[1],
+            "total_tokens": outputs.shape[1]
+        },
         "latency_seconds": round(end - start, 3)
     }
-
 
 @app.get("/health")
 def health():

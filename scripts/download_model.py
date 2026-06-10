@@ -1,6 +1,5 @@
 import os
 from huggingface_hub import login, snapshot_download
-import torch
 
 def download_model():
     hf_token = os.environ.get('hf_token')
