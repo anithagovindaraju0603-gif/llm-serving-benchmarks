@@ -41,10 +41,10 @@ do
         --num-prompts 1000 \
         --request-rate $RATE \
         --save-result \
-        --result-dir /workspace/benchmarks/results/$FRAMEWORK \
+        --result-dir /workspace/llm-serving-benchmarks/benchmarks/results/$FRAMEWORK \
         --result-filename ${FRAMEWORK}_rate${RATE}.json
 
-    echo "Done. Results saved to /workspace/benchmarks/results/$FRAMEWORK/${FRAMEWORK}_rate${RATE}.json"
+    echo "Done. Results saved to /workspace/llm-serving-benchmarks/benchmarks/results/$FRAMEWORK/${FRAMEWORK}_rate${RATE}.json"
 done
 
 echo "All benchmarks complete for $FRAMEWORK"
